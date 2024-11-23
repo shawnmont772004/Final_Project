@@ -1,0 +1,13 @@
+spring:
+  config:
+    import: optional:configserver:http://localhost:8888
+    #the above line means if v dont find our config of the given ms, to prevent stopping of the app
+  application:
+    name: discovery-service
+    #when we start our configurations v need to add configs to our discovery server
+
+
+
+
+
+

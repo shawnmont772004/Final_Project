@@ -2,10 +2,12 @@ package com.shawn.medcom.order;
 
 import com.shawn.medcom.customer.CustomerClient;
 import com.shawn.medcom.exception.BusinessException;
+import com.shawn.medcom.kafka.OrderConfirmation;
 import com.shawn.medcom.orderline.OrderLineRequest;
 import com.shawn.medcom.orderline.OrderLineService;
 import com.shawn.medcom.product.ProductClient;
 import com.shawn.medcom.product.PurchaseRequest;
+import com.shawn.medcom.kafka.OrderProducer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ public class OrderService {
     private final OrderMapper mapper;
     private final CustomerClient customerClient;
     private final ProductClient productClient;
+    private final OrderProducer orderProducer;
 
     private final OrderLineService orderLineService;
 
@@ -51,9 +54,33 @@ public class OrderService {
         //start payment process
 
         //send the order confirmation -->notification-ms (kafka)
-        return null;
+        orderProducer.sendOrderConfirmation(
+                new OrderConfirmation(
+                        request.reference(),
+                        request.amount(),
+                        request.paymentMethod(),
+                        customer,
+                        purchasedProducts
+                )
+        );
+
+        return order.getId();
+
 
     }
 
+    //to find all orders logic
+    public List<OrderResponse> findAllOrders() {
+        return this.repository.findAll()
+                .stream()
+                .map(this.mapper::fromOrder)
+                .collect(Collectors.toList());
+    }
 
+    //find by id
+    public OrderResponse findById(Integer id) {
+        return this.repository.findById(id)
+                .map(this.mapper::fromOrder)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("No order found with the provided ID: %d", id)));
+    }
 }

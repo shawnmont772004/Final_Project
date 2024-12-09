@@ -1,5 +1,6 @@
 package com.shawn.medcom.orderline;
 
+import com.netflix.spectator.api.Meter;
 import com.shawn.medcom.order.Order;
 import org.springframework.stereotype.Service;
 
@@ -16,5 +17,12 @@ public class OrderLineMapper {
                 )
                 .quantity(request.quantity())
                 .build();
+    }
+
+    public OrderLineResponse toOrderLineResponse(OrderLine orderLine) {
+        return new OrderLineResponse(
+                orderLine.getId(),
+                orderLine.getQuantity()
+        );
     }
 }

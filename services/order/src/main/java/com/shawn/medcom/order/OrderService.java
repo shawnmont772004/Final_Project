@@ -5,6 +5,8 @@ import com.shawn.medcom.exception.BusinessException;
 import com.shawn.medcom.kafka.OrderConfirmation;
 import com.shawn.medcom.orderline.OrderLineRequest;
 import com.shawn.medcom.orderline.OrderLineService;
+import com.shawn.medcom.payment.PaymentClient;
+import com.shawn.medcom.payment.PaymentRequest;
 import com.shawn.medcom.product.ProductClient;
 import com.shawn.medcom.product.PurchaseRequest;
 import com.shawn.medcom.kafka.OrderProducer;
@@ -24,7 +26,7 @@ public class OrderService {
     private final CustomerClient customerClient;
     private final ProductClient productClient;
     private final OrderProducer orderProducer;
-
+    private final PaymentClient paymentClient;
     private final OrderLineService orderLineService;
 
     @Transactional
@@ -52,6 +54,15 @@ public class OrderService {
         }
 
         //start payment process
+        var paymentRequest = new PaymentRequest(
+                request.amount(),
+                request.paymentMethod(),
+                order.getId(),
+                order.getReference(),
+                customer
+        );
+
+        paymentClient.requestOrderPayment(paymentRequest);
 
         //send the order confirmation -->notification-ms (kafka)
         orderProducer.sendOrderConfirmation(

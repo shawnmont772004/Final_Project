@@ -13,4 +13,8 @@ public class BusinessException extends RuntimeException {
         super(msg); // Sets the `message` field in the parent class
         this.msg = msg; // Initializes your custom field
     }
+    public String getMsg() {
+        return msg;
+    }
+
 }

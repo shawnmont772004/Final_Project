@@ -9,11 +9,13 @@ public class PaymentMapper {
         if (request == null) {
             return null;
         }
-        return Payment.builder()
-                .id(request.id())
-                .paymentMethod(request.paymentMethod())
-                .amount(request.amount())
-                .orderId(request.orderId())
-                .build();
+
+        Payment payment = new Payment();
+        payment.setId(request.id());
+        payment.setPaymentMethod(request.paymentMethod());
+        payment.setAmount(request.amount());
+        payment.setOrderId(request.orderId());
+
+        return payment;
     }
 }

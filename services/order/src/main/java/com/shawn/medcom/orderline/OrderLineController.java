@@ -1,6 +1,5 @@
 package com.shawn.medcom.orderline;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,10 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/order-lines")
-@RequiredArgsConstructor
 public class OrderLineController {
 
     private final OrderLineService service;
+
+    public OrderLineController(OrderLineService service) {
+        this.service = service;
+    }
 
     @GetMapping("/order/{order-id}")
     public ResponseEntity<List<OrderLineResponse>> findByOrderId(

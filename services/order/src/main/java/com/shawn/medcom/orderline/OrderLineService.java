@@ -1,21 +1,24 @@
 package com.shawn.medcom.orderline;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class OrderLineService {
 
     private final OrderLineRepository repository;
     private final OrderLineMapper mapper;
 
+    public OrderLineService(OrderLineRepository repository, OrderLineMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
+    }
+
     public Integer saveOrderLine(OrderLineRequest request) {
-        var order = mapper.toOrderLine(request);
-        return repository.save(order).getId();
+        OrderLine orderLine = mapper.toOrderLine(request);
+        return repository.save(orderLine).getId();
     }
 
     public List<OrderLineResponse> findAllByOrderId(Integer orderId) {

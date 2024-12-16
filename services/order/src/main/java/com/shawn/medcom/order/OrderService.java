@@ -11,14 +11,13 @@ import com.shawn.medcom.product.ProductClient;
 import com.shawn.medcom.product.PurchaseRequest;
 import com.shawn.medcom.kafka.OrderProducer;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository repository;
@@ -29,20 +28,39 @@ public class OrderService {
     private final PaymentClient paymentClient;
     private final OrderLineService orderLineService;
 
+    // Constructor for dependency injection (replacing @RequiredArgsConstructor)
+    public OrderService(
+            OrderRepository repository,
+            OrderMapper mapper,
+            CustomerClient customerClient,
+            ProductClient productClient,
+            OrderProducer orderProducer,
+            PaymentClient paymentClient,
+            OrderLineService orderLineService
+    ) {
+        this.repository = repository;
+        this.mapper = mapper;
+        this.customerClient = customerClient;
+        this.productClient = productClient;
+        this.orderProducer = orderProducer;
+        this.paymentClient = paymentClient;
+        this.orderLineService = orderLineService;
+    }
+
     @Transactional
     public Integer createOrder(OrderRequest request) {
 
-        //check the customer --> OpenFeign
+        // Check the customer via OpenFeign
         var customer = this.customerClient.findCustomerById(request.customerId())
                 .orElseThrow(() -> new BusinessException("Cannot create order:: No customer exists with the provided ID"));
 
-        //purchase the products --> product-ms
+        // Purchase the products via product-ms
         var purchasedProducts = productClient.purchaseProducts(request.products());
 
-        //persist order
+        // Persist order
         var order = this.repository.save(mapper.toOrder(request));
 
-        //persist order lines
+        // Persist order lines
         for (PurchaseRequest purchaseRequest : request.products()) {
             orderLineService.saveOrderLine(
                     new OrderLineRequest(
@@ -54,7 +72,7 @@ public class OrderService {
             );
         }
 
-        //start payment process
+        // Start payment process
         var paymentRequest = new PaymentRequest(
                 request.amount(),
                 request.paymentMethod(),
@@ -65,7 +83,7 @@ public class OrderService {
 
         paymentClient.requestOrderPayment(paymentRequest);
 
-        //send the order confirmation -->notification-ms (kafka)
+        // Send the order confirmation via notification-ms (Kafka)
         orderProducer.sendOrderConfirmation(
                 new OrderConfirmation(
                         request.reference(),
@@ -77,11 +95,9 @@ public class OrderService {
         );
 
         return order.getId();
-
-
     }
 
-    //to find all orders logic
+    // Find all orders logic
     public List<OrderResponse> findAllOrders() {
         return this.repository.findAll()
                 .stream()
@@ -89,7 +105,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    //find by id
+    // Find by ID logic
     public OrderResponse findById(Integer id) {
         return this.repository.findById(id)
                 .map(this.mapper::fromOrder)
